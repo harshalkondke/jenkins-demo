@@ -1,4 +1,4 @@
-def tomcatServerUrl = "http://172.31.12.179:8084"
+def tomcatServerUrl = "http://172.31.15.38"
 pipeline {
   agent {
     node {
