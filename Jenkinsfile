@@ -25,7 +25,7 @@ pipeline {
       steps {
         //deploy war on tomcat server
         deploy adapters: [tomcat8(url: "${tomcatServerUrl}",
-            credentialsId: 'tomcat-credentials')],
+            credentialsId: 'ec2-user')],
           war: '**/*.war',
           contextPath: 'pipeline-app'
 
