@@ -11,8 +11,6 @@ pipeline {
         // Run the maven build
         sh '"mvn" -Dmaven.test.failure.ignore clean install'
       }
-
-    }
     stage('Deploy') {
       steps {
         //deploy war on tomcat server
@@ -22,6 +20,4 @@ pipeline {
           contextPath: 'sample'
 
       }
-    }
-  }
 }
