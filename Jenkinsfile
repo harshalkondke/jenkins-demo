@@ -7,6 +7,13 @@ pipeline {
   }
 
   stages {
+    stage('SonarQube') {
+        steps{
+          withSonarQubeEnv('sonarqube-8.7') { 
+            sh "mvn sonar:sonar"
+          }
+        }
+    }
     stage('Build') {
       steps {
         // Run the maven build
@@ -14,13 +21,7 @@ pipeline {
       }
 
     }
-    stage('SonarQube analysis') {
-        steps{
-          withSonarQubeEnv('sonarqube-8.7') { 
-            sh "mvn sonar:sonar"
-          }
-        }
-    }
+   
     stage('Test') {
       steps {
         sh(script: 'mvn --batch-mode -Dmaven.test.failure.ignore=true test')
