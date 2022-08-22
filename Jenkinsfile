@@ -21,6 +21,12 @@ pipeline {
           }
         }
     }
+    stage('Test') {
+      steps {
+        sh(script: './mvnw --batch-mode -Dmaven.test.failure.ignore=true test')
+
+      }
+    }
     stage('Deploy') {
       steps {
         //deploy war on tomcat server
