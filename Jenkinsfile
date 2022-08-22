@@ -14,6 +14,13 @@ pipeline {
       }
 
     }
+    stage('SonarQube analysis') {
+        steps{
+          withSonarQubeEnv('sonarqube-8.7') { 
+            sh "mvn sonar:sonar"
+          }
+        }
+    }
     stage('Deploy') {
       steps {
         //deploy war on tomcat server
