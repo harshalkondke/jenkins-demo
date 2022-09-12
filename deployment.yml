@@ -20,6 +20,6 @@ spec:
         - name: jenkins
           image: 394266983666.dkr.ecr.ap-south-1.amazonaws.com/jenkins-test:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
               protocol: TCP
           imagePullPolicy: Always
