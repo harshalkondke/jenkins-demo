@@ -59,6 +59,13 @@ pipeline {
                 checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/harshalkondke/jenkins-demo.git']]])     
             }
         }
+      stage('Build') {
+          steps {
+            // Run the maven build
+            sh 'mvn clean package'
+          }
+
+    }
   
     // Building Docker images
     stage('Building image') {
