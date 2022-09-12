@@ -34,7 +34,11 @@
 //   }
 // }
 pipeline {
-    agent any
+  agent {
+    node {
+      label 'jenkins-slave'
+    }
+  }
     environment {
         AWS_ACCOUNT_ID="394266983666"
         AWS_DEFAULT_REGION="ap-south-1" 
