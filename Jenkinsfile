@@ -61,10 +61,16 @@ pipeline {
             }
         }
       stage('Build') {
-          steps {
-            // Run the maven build
-              sh 'mvn clean package'
-          }
+//           steps {
+//             // Run the maven build
+//               sh 'mvn clean package'
+//           }
+          def mvnContainer = docker.image('jimschubert/8-jdk-alpine-mvn')
+  mvnContainer.inside('-v /m2repo:/m2repo') {
+         
+      // Build with maven settings.xml file that specs the local Maven repo.
+      sh 'mvn -B -s settings.xml package'
+   }
 
     }
   
@@ -72,7 +78,7 @@ pipeline {
     stage('Building image') {
       steps{
         script {
-          dockerImage = docker.build ("harshalkondke/jenkins-demo:${IMAGE_TAG}")
+          dockerImage = docker.build ("jenkins-demo:${IMAGE_TAG}")
         }
       }
     }
