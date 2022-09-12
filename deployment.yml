@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-app-jenkins 
+  labels:
+    app: jenkins
+spec:
+  selector:
+    matchLabels:
+        app: jenkins
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+        - name: jenkins
+          image: 394266983666.dkr.ecr.ap-south-1.amazonaws.com/jenkins-test:latest
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          imagePullPolicy: Always
