@@ -69,10 +69,8 @@ pipeline {
   
     // Building Docker images
     stage('Building image') {
-      steps{
-        script {
-          dockerImage = docker.build ("jenkins-demo:${IMAGE_TAG}")
-        }
+      steps {
+        sh 'docker build . -t ${IMAGE_REPO_NAME}:${IMAGE_TAG}' 
       }
     }
    
