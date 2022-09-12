@@ -62,7 +62,7 @@ pipeline {
       stage('Build') {
           steps {
             // Run the maven build
-            sh 'mvn clean package'
+             sh '"mvn" -Dmaven.test.failure.ignore clean install'
           }
 
     }
