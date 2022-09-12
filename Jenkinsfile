@@ -34,11 +34,8 @@
 //   }
 // }
 pipeline {
-  agent {
-    node {
-      label 'jenkins-slave'
-    }
-  }
+  agent any 
+//   tools { maven 'maven-3.6.3' }
     environment {
         AWS_ACCOUNT_ID="394266983666"
         AWS_DEFAULT_REGION="ap-south-1" 
