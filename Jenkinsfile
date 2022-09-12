@@ -72,7 +72,7 @@ pipeline {
     stage('Building image') {
       steps{
         script {
-          dockerImage = docker.build "harshalkondke/jenkins-demo:${IMAGE_TAG}"
+          dockerImage = docker.build ("harshalkondke/jenkins-demo:${IMAGE_TAG}")
         }
       }
     }
