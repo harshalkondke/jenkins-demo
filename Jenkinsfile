@@ -63,7 +63,7 @@ pipeline {
       stage('Build') {
           steps {
             // Run the maven build
-              sh 'mvn clean package'
+              sh 'mvn clean install spring-boot:repackage'
           }
     }
   
