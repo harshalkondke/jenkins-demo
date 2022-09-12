@@ -69,7 +69,7 @@ pipeline {
   mvnContainer.inside('-v /m2repo:/m2repo') {
          
       // Build with maven settings.xml file that specs the local Maven repo.
-      sh 'mvn -B -s settings.xml package'
+       sh 'mvn clean package'
    }
 
     }
