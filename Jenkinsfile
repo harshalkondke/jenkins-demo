@@ -49,7 +49,7 @@ pipeline {
          stage('Logging into AWS ECR') {
             steps {
                 script {
-                sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+                sh "/usr/local/bin/aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
                 }
                  
             }
@@ -87,7 +87,7 @@ pipeline {
      stage("Deploy"){
       steps{
         withCredentials([string(credentialsId: 'kubes', variable: 'kubes')]){
-          //sh 'aws eks update-kubeconfig --name demo-eks --region ap-south-1'
+          //sh '/usr/local/bin/aws eks update-kubeconfig --name demo-eks --region ap-south-1'
 //           sh '/usr/local/bin/kubectl apply -f deployment.yml'
           sh '''if /usr/local/bin/kubectl get deploy | grep java-login-app
           then
