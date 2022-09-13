@@ -88,8 +88,17 @@ pipeline {
       steps{
         withCredentials([string(credentialsId: 'kubes', variable: 'kubes')]){
           //sh 'aws eks update-kubeconfig --name demo-eks --region ap-south-1'
-          sh '/usr/local/bin/kubectl apply -f deployment.yml'
-        }}
+//           sh '/usr/local/bin/kubectl apply -f deployment.yml'
+          sh '''if /usr/local/bin/kubectl get deploy | grep java-login-app
+          then
+          /usr/local/bin/kubectl set image deployment java-login-app 394266983666.dkr.ecr.ap-south-1.amazonaws.com/jenkins:latest
+          /usr/local/bin/kubectl rollout restart deployment java-login-app
+          else
+          /usr/local/bin/kubectl apply -f deployment.yml
+          fi'''
+        }
+      }
     }
+
     }
 }
