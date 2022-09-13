@@ -86,10 +86,10 @@ pipeline {
 
      stage("Deploy"){
       steps{
-          withCredentials([string(credentialsId: 'kubes', variable: 'kubes')])
+        withCredentials([string(credentialsId: 'kubes', variable: 'kubes')]){
           sh 'aws eks update-kubeconfig --name demo-eks --region ap-south-1'
           sh 'kubectl apply -f deployment.yaml'
-      }
+        }}
     }
     }
 }
