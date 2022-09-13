@@ -86,7 +86,7 @@ pipeline {
 
      stage("Deploy"){
       steps{
-        withCredentials([string(credentialsId: 'kubes', variable: 'kubes')]){
+        withCredentials([string(credentialsId: 'kube-up', variable: 'kube-up')]){
           //sh 'aws eks update-kubeconfig --name demo-eks --region ap-south-1'
           sh '/usr/local/bin/kubectl apply -f deployment.yaml'
         }}
