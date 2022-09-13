@@ -86,7 +86,7 @@ pipeline {
 
      stage("Deploy"){
       steps{
-         // sh 'aws eks update-kubeconfig --name jenkins-test --region ap-south-1'
+          sh 'aws eks update-kubeconfig --name demo-eks --region ap-south-1'
           sh 'kubectl apply -f deployment.yaml'
       }
     }
