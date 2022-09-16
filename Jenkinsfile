@@ -49,7 +49,7 @@ pipeline {
          stage('Logging into AWS ECR') {
             steps {
                 script {
-                sh "sudo /usr/local/bin/aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+                sh "/usr/local/bin/aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
                 }
                  
             }
@@ -63,14 +63,14 @@ pipeline {
       stage('Build') {
           steps {
             // Run the maven build
-              sh 'sudo mvn clean install'
+              sh 'mvn clean install'
           }
     }
   
     // Building Docker images
     stage('Building image') {
       steps {
-        sh 'sudo docker build . -t ${IMAGE_REPO_NAME}:${IMAGE_TAG}' 
+        sh 'docker build . -t ${IMAGE_REPO_NAME}:${IMAGE_TAG}' 
       }
     }
    
@@ -78,8 +78,8 @@ pipeline {
     stage('Pushing to ECR') {
      steps{  
          script {
-                sh "sudo docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
-                sh "sudo docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+                sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
+                sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
          }
         }
       }
