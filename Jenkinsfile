@@ -86,8 +86,10 @@ pipeline {
 
      stage("Deploy"){
       steps{
-
-          sh 'kubectl apply -f deployment.yml'
+        
+        withCredentials([string(credentialsId: 'kubes', variable: 'kubes')]){
+             sh 'kubectl apply -f <diretory-or-file> --token kubes --server apiserver.hostname.local' }
+//           sh 'kubectl apply -f deployment.yml'
 //         withCredentials([string(credentialsId: 'kubes', variable: 'kubes')]){
 //           //sh '/usr/local/bin/aws eks update-kubeconfig --name demo-eks --region ap-south-1'
 //           sh 'kubectl apply -f deployment.yml --context demo-eks'
