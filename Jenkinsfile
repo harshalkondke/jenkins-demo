@@ -55,21 +55,14 @@ pipeline {
             }
         }
         
-        stage('Cloning Git') {
-            steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/harshalkondke/jenkins-demo.git']]])     
-            }
-        }
-      stage('Build') {
-          steps {
-            // Run the maven build
-              sh 'mvn clean install'
-              sh 'whoami'
-          }
+          stages {
+    stage('Build with Maven') {
+      steps {
+        checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/harshalkondke/jenkins-demo.git']]])
+        sh 'mvn clean install'
+      }
     }
-  
-    // Building Docker images
-    stage('Building image') {
+    stage('Build Tomcat Image') {
       steps {
         sh 'docker build . -t ${IMAGE_REPO_NAME}:${IMAGE_TAG}' 
       }
