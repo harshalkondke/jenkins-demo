@@ -11,7 +11,6 @@
 # EXPOSE 8080
 # CMD ["catalina.sh", "run"]
 FROM tomcat:9.0
-LABEL maintainer="Mohit Namdeo"
 RUN apt-get update && apt-get -y upgrade
 WORKDIR /usr/local/tomcat
 User root
