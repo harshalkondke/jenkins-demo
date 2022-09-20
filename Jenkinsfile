@@ -82,4 +82,5 @@ pipeline {
         sh '/usr/local/bin/kubectl apply -f deployment.yml'
       }
     }
+    }
 }
