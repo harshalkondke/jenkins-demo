@@ -81,7 +81,7 @@ pipeline {
      stage("Deploy"){
       steps{
         
-        withCredentials([string(credentialsId: 'kubes', variable: 'kubes')]){
+//         withCredentials([string(credentialsId: 'kubes', variable: 'kubes')]){
              sh '/usr/local/bin/kubectl apply -f deployment.yml' }
 //           sh 'kubectl apply -f deployment.yml'
 //         withCredentials([string(credentialsId: 'kubes', variable: 'kubes')]){
@@ -95,7 +95,7 @@ pipeline {
 // //           /usr/local/bin/kubectl apply -f deployment.yml
 // //           fi'''
 //         }
-      }
+//       }
     }
 
     }
