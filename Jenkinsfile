@@ -171,7 +171,7 @@ pipeline {
     }
     stage("Get Kibana Dashboard") {
       steps {
-         sh 'kubectl expose deployment kibana-kibana --name kibana-dashboard -n ${ELK_NAMESPACE} --type LoadBalancer'
+         sh 'kubectl expose deployment kibana --name kibana-dashboard -n ${ELK_NAMESPACE} --type LoadBalancer'
       }
     }
   }
