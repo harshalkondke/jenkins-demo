@@ -155,7 +155,7 @@ pipeline {
     }
     stage("Install ElasticSearch") {
       steps {
-         sh '''if kubectl get pods --namespace=${ELK_NAMESPACE} -l app=elasticsearch-master
+         sh '''if kubectl get ns | grep ${ELK_NAMESPACE}
             then
             kubectl get pods --namespace=${ELK_NAMESPACE} -l app=elasticsearch-master | grep elasticsearch
             else
