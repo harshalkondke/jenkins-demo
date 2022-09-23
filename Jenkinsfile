@@ -93,8 +93,8 @@ pipeline {
     IMAGE_REPO_NAME="jenkins"
     IMAGE_TAG="latest"
     REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
-    ELK_NAMESPACE = "elk-space"
-    AWS_EKS_NAME = "mkn-eks"
+    ELK_NAMESPACE = "elk-namespace"
+    AWS_EKS_NAME = "eks-ns"
   }
   stages {
     stage('Maven Build') {
