@@ -93,6 +93,7 @@ pipeline {
         IMAGE_REPO_NAME="jenkins"
         IMAGE_TAG="latest"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+        ELK_NAMESPACE = "elk-namespace"
     }
   
   stages {
@@ -154,20 +155,20 @@ pipeline {
     }
     stage("Install ElasticSearch using Helm") {
       steps {
-         sh '''if kubectl get pods -l app=elasticsearch-master
+         sh '''if kubectl get pods --namespace=${ELK_NAMESPACE} -l app=elasticsearch-master
             then
-            kubectl get pods -l app=elasticsearch-master | grep elasticsearch
+            kubectl get pods --namespace=${ELK_NAMESPACE} -l app=elasticsearch-master | grep elasticsearch
             else
             kubectl create namespace ${ELK_NAMESPACE}
-            helm install elasticsearch elastic/elasticsearch --set replicas=2
+            helm install elasticsearch elastic/elasticsearch -n ${ELK_NAMESPACE} --set replicas=2
             fi'''
       }
     }
     stage("Install Kibana using Helm") {
       steps {
-         sh '''if kubectl get pods | grep kibana
+         sh '''if kubectl get pods -n ${ELK_NAMESPACE} | grep kibana
             then
-            kubectl get pods | grep kibana
+            kubectl get pods -n ${ELK_NAMESPACE} | grep kibana
             else
             helm install kibana elastic/kibana -n ${ELK_NAMESPACE}
             fi'''
@@ -175,22 +176,27 @@ pipeline {
     }
     stage("Install Metricbeat using Helm") {
       steps {
-         sh '''if kubectl get pods | grep metricbeat
+         sh '''if kubectl get pods -n ${ELK_NAMESPACE} | grep metricbeat
             then
-            kubectl get pods | grep metricbeat
+            kubectl get pods -n ${ELK_NAMESPACE} | grep metricbeat
             else
-            helm install metricbeat elastic/metricbeat --set replicas=3
+            helm install metricbeat elastic/metricbeat -n ${ELK_NAMESPACE} --set replicas=3
             fi'''
       }
     }
     stage("Get Kibana Dashboard") {
       steps {
-         sh '''if kubectl get svc | grep kibana-dashboard
+         sh '''if kubectl get svc -n ${ELK_NAMESPACE} | grep kibana-dashboard
             then
-            kubectl get svc | grep kibana-dashboard
+            kubectl get svc -n ${ELK_NAMESPACE} | grep kibana-dashboard
             else
-            kubectl expose deployment kibana-kibana --name kibana-dashboard --type LoadBalancer
+            kubectl expose deployment kibana-kibana --name kibana-dashboard -n ${ELK_NAMESPACE} --type LoadBalancer
             fi'''
+      }
+      post {
+        success{
+          sh 'kubectl get svc -n ${ELK_NAMESPACE} | grep kibana-dashboard'
+        }
       }
     }
   }
