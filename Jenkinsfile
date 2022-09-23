@@ -124,7 +124,7 @@ pipeline {
     stage("Wait for Deployments") {
       steps {
         timeout(time: 2, unit: 'MINUTES') {
-          sh '/home/ubuntu/bin/kubectl get svc'
+          sh 'kubectl get svc'
         }
       }
     }
