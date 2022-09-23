@@ -33,54 +33,165 @@
 //     }
 //   }
 // }
+// pipeline {
+//   agent any 
+//     environment {
+//         AWS_ACCOUNT_ID="394266983666"
+//         AWS_DEFAULT_REGION="ap-south-1" 
+//         IMAGE_REPO_NAME="jenkins"
+//         IMAGE_TAG="latest"
+//         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+//     }
+   
+//     stages {
+        
+//          stage('Logging into AWS ECR') {
+//             steps {
+//                 script {
+//                 sh "/usr/local/bin/aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+//                 }
+                 
+//             }
+//         }
+        
+   
+//     stage('Build with Maven') {
+//       steps {
+//         checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/harshalkondke/jenkins-demo.git']]])
+//         sh 'mvn clean install'
+//       }
+//     }
+//     stage('Build Tomcat Image') {
+//       steps {
+//         sh 'docker build . -t ${IMAGE_REPO_NAME}:${IMAGE_TAG}' 
+//       }
+//     }
+   
+//     // Uploading Docker images into AWS ECR
+//     stage('Pushing to ECR') {
+//      steps{  
+//          script {
+//                 sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
+//                 sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+//          }
+//         }
+//       }
+
+//      stage("Deploy"){
+//       steps{
+//         sh '/usr/local/bin/kubectl apply -f deployment.yml'
+//       }
+//     }
+//     }
+// }
+
 pipeline {
   agent any 
-    environment {
+   environment {
         AWS_ACCOUNT_ID="394266983666"
         AWS_DEFAULT_REGION="ap-south-1" 
         IMAGE_REPO_NAME="jenkins"
         IMAGE_TAG="latest"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
     }
-   
-    stages {
-        
-         stage('Logging into AWS ECR') {
-            steps {
-                script {
-                sh "/usr/local/bin/aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
-                }
-                 
-            }
-        }
-        
-   
+  
+  stages {
     stage('Build with Maven') {
       steps {
         checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/harshalkondke/jenkins-demo.git']]])
         sh 'mvn clean install'
       }
     }
-    stage('Build Tomcat Image') {
+    stage('Build Image') {
       steps {
         sh 'docker build . -t ${IMAGE_REPO_NAME}:${IMAGE_TAG}' 
       }
     }
-   
-    // Uploading Docker images into AWS ECR
-    stage('Pushing to ECR') {
-     steps{  
-         script {
-                sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
-                sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-         }
+    stage('Push to ECR') {
+      steps {
+        script {
+          sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+          sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
+          sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
         }
       }
-
-     stage("Deploy"){
+    }
+    stage("Deploy to EKS"){
       steps{
-        sh '/usr/local/bin/kubectl apply -f deployment.yml'
+          sh 'kubectl apply -f deployment.yml'
       }
     }
+    stage("Wait for Deployments") {
+      steps {
+        timeout(time: 2, unit: 'MINUTES') {
+          sh '/home/ubuntu/bin/kubectl get svc'
+        }
+      }
     }
+    stage("get Helm") {
+      steps {
+        sh '''if helm version
+            then
+            helm repo list
+            else
+            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+            chmod 700 get_helm.sh
+            ./get_helm.sh
+            helm version
+            fi'''
+      }
+    }
+    stage("Add Helm Repo") {
+      steps {
+        sh '''if helm repo list | grep elastic
+            then
+            helm repo update
+            else
+            helm repo add elastic https://charts.helm.sh/stable
+            helm repo update
+            fi'''
+      }
+    }
+    stage("Install ElasticSearch using Helm") {
+      steps {
+         sh '''if kubectl get pods -l app=elasticsearch-master
+            then
+            kubectl get pods -l app=elasticsearch-master | grep elasticsearch
+            else
+            kubectl create namespace ${ELK_NAMESPACE}
+            helm install elasticsearch elastic/elasticsearch --set replicas=2
+            fi'''
+      }
+    }
+    stage("Install Kibana using Helm") {
+      steps {
+         sh '''if kubectl get pods | grep kibana
+            then
+            kubectl get pods | grep kibana
+            else
+            helm install kibana elastic/kibana -n ${ELK_NAMESPACE}
+            fi'''
+      }
+    }
+    stage("Install Metricbeat using Helm") {
+      steps {
+         sh '''if kubectl get pods | grep metricbeat
+            then
+            kubectl get pods | grep metricbeat
+            else
+            helm install metricbeat elastic/metricbeat --set replicas=3
+            fi'''
+      }
+    }
+    stage("Get Kibana Dashboard") {
+      steps {
+         sh '''if kubectl get svc | grep kibana-dashboard
+            then
+            kubectl get svc | grep kibana-dashboard
+            else
+            kubectl expose deployment kibana-kibana --name kibana-dashboard --type LoadBalancer
+            fi'''
+      }
+    }
+  }
 }
