@@ -190,7 +190,7 @@ pipeline {
             then
             kubectl get svc -n ${ELK_NAMESPACE} | grep kibana-dashboard
             else
-            kubectl expose deployment kibana-kibana --name kibana-dashboard -n ${ELK_NAMESPACE} --type LoadBalancer
+            kubectl expose deployment kibana --name kibana-dashboard -n ${ELK_NAMESPACE} --type LoadBalancer
             fi'''
       }
       post {
