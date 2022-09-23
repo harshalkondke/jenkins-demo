@@ -97,18 +97,18 @@ pipeline {
     AWS_EKS_NAME = "mkn-eks"
   }
   stages {
-    stage('Build with Maven') {
+    stage('Maven Build') {
       steps {
         checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/harshalkondke/jenkins-demo.git']]])
         sh 'mvn clean install'
       }
     }
-    stage('Build Tomcat Image') {
+    stage('Docker Build') {
       steps {
         sh 'docker build . -t ${IMAGE_REPO_NAME}:${IMAGE_TAG}' 
       }
     }
-    stage('Push to AWS-ECR Repo') {
+    stage('Push to ECR') {
       steps {
         script {
           sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
@@ -119,14 +119,8 @@ pipeline {
     }
     stage("Deploy to EKS"){
       steps{
-          sh '''if kubectl get deploy | grep java-login-app
-            then
-            kubectl set image deployment java-login-app java-app=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}
-            kubectl rollout restart deployment java-login-app
-            else
-            kubectl apply -f deployment.yaml
-            fi'''
-      }
+          sh 'kubectl apply -f deployment.yaml'
+            }
     }
     stage("Wait for Deployments") {
       steps {
@@ -159,50 +153,25 @@ pipeline {
             fi'''
       }
     }
-    stage("Install ElasticSearch using Helm") {
+    stage("Install ElasticSearch") {
       steps {
-         sh '''if kubectl get pods --namespace=${ELK_NAMESPACE} -l app=elasticsearch-master
-            then
-            kubectl get pods --namespace=${ELK_NAMESPACE} -l app=elasticsearch-master | grep elasticsearch
-            else
-            kubectl create namespace ${ELK_NAMESPACE}
-            helm install elasticsearch elastic/elasticsearch -n ${ELK_NAMESPACE} --set replicas=2
-            fi'''
+         sh 'kubectl create namespace ${ELK_NAMESPACE}'
+         sh 'helm install elasticsearch elastic/elasticsearch -n ${ELK_NAMESPACE} --set replicas=2'
       }
     }
-    stage("Install Kibana using Helm") {
+    stage("Install Kibana") {
       steps {
-         sh '''if kubectl get pods -n ${ELK_NAMESPACE} | grep kibana
-            then
-            kubectl get pods -n ${ELK_NAMESPACE} | grep kibana
-            else
-            helm install kibana elastic/kibana -n ${ELK_NAMESPACE}
-            fi'''
+         sh 'helm install kibana elastic/kibana -n ${ELK_NAMESPACE}'
       }
     }
-    stage("Install Metricbeat using Helm") {
+    stage("Install Metricbeat") {
       steps {
-         sh '''if kubectl get pods -n ${ELK_NAMESPACE} | grep metricbeat
-            then
-            kubectl get pods -n ${ELK_NAMESPACE} | grep metricbeat
-            else
-            helm install metricbeat elastic/metricbeat -n ${ELK_NAMESPACE} --set replicas=3
-            fi'''
+         sh 'helm install metricbeat elastic/metricbeat -n ${ELK_NAMESPACE} --set replicas=3'
       }
     }
     stage("Get Kibana Dashboard") {
       steps {
-         sh '''if kubectl get svc -n ${ELK_NAMESPACE} | grep kibana-dashboard
-            then
-            kubectl get svc -n ${ELK_NAMESPACE} | grep kibana-dashboard
-            else
-            kubectl expose deployment kibana-kibana --name kibana-dashboard -n ${ELK_NAMESPACE} --type LoadBalancer
-            fi'''
-      }
-      post {
-        success{
-          sh 'kubectl get svc -n ${ELK_NAMESPACE} | grep kibana-dashboard'
-        }
+         sh 'kubectl expose deployment kibana-kibana --name kibana-dashboard -n ${ELK_NAMESPACE} --type LoadBalancer'
       }
     }
   }
