@@ -86,16 +86,16 @@
 // }
 
 pipeline {
-  agent any 
-   environment {
-        AWS_ACCOUNT_ID="394266983666"
-        AWS_DEFAULT_REGION="ap-south-1" 
-        IMAGE_REPO_NAME="jenkins"
-        IMAGE_TAG="latest"
-        REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
-        ELK_NAMESPACE = "elk-namespace"
-    }
-  
+  agent any
+  environment {
+    AWS_ACCOUNT_ID="394266983666"
+    AWS_DEFAULT_REGION="ap-south-1" 
+    IMAGE_REPO_NAME="jenkins"
+    IMAGE_TAG="latest"
+    REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+    ELK_NAMESPACE = "elk-space"
+    AWS_EKS_NAME = "mkn-eks"
+  }
   stages {
     stage('Build with Maven') {
       steps {
@@ -103,12 +103,12 @@ pipeline {
         sh 'mvn clean install'
       }
     }
-    stage('Build Image') {
+    stage('Build Tomcat Image') {
       steps {
         sh 'docker build . -t ${IMAGE_REPO_NAME}:${IMAGE_TAG}' 
       }
     }
-    stage('Push to ECR') {
+    stage('Push to AWS-ECR Repo') {
       steps {
         script {
           sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
@@ -119,7 +119,13 @@ pipeline {
     }
     stage("Deploy to EKS"){
       steps{
-          sh 'kubectl apply -f deployment.yml'
+          sh '''if kubectl get deploy | grep java-login-app
+            then
+            kubectl set image deployment java-login-app java-app=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}
+            kubectl rollout restart deployment java-login-app
+            else
+            kubectl apply -f deployment.yaml
+            fi'''
       }
     }
     stage("Wait for Deployments") {
