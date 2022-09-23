@@ -155,23 +155,48 @@ pipeline {
     }
     stage("Install ElasticSearch") {
       steps {
-         sh 'kubectl create namespace ${ELK_NAMESPACE}'
-         sh 'helm install elasticsearch elastic/elasticsearch -n ${ELK_NAMESPACE} --set replicas=2'
+         sh '''if kubectl get pods --namespace=${ELK_NAMESPACE} -l app=elasticsearch-master
+            then
+            kubectl get pods --namespace=${ELK_NAMESPACE} -l app=elasticsearch-master | grep elasticsearch
+            else
+            kubectl create namespace ${ELK_NAMESPACE}
+            helm install elasticsearch elastic/elasticsearch -n ${ELK_NAMESPACE} --set replicas=2
+            fi'''
       }
     }
     stage("Install Kibana") {
       steps {
-         sh 'helm install kibana elastic/kibana -n ${ELK_NAMESPACE}'
+         sh '''if kubectl get pods -n ${ELK_NAMESPACE} | grep kibana
+            then
+            kubectl get pods -n ${ELK_NAMESPACE} | grep kibana
+            else
+            helm install kibana elastic/kibana -n ${ELK_NAMESPACE}
+            fi'''
       }
     }
     stage("Install Metricbeat") {
       steps {
-         sh 'helm install metricbeat elastic/metricbeat -n ${ELK_NAMESPACE} --set replicas=3'
+         sh '''if kubectl get pods -n ${ELK_NAMESPACE} | grep metricbeat
+            then
+            kubectl get pods -n ${ELK_NAMESPACE} | grep metricbeat
+            else
+            helm install metricbeat elastic/metricbeat -n ${ELK_NAMESPACE} --set replicas=3
+            fi'''
       }
     }
     stage("Get Kibana Dashboard") {
       steps {
-         sh 'kubectl expose deployment kibana --name kibana-dashboard -n ${ELK_NAMESPACE} --type LoadBalancer'
+         sh '''if kubectl get svc -n ${ELK_NAMESPACE} | grep kibana-dashboard
+            then
+            kubectl get svc -n ${ELK_NAMESPACE} | grep kibana-dashboard
+            else
+            kubectl expose deployment kibana-kibana --name kibana-dashboard -n ${ELK_NAMESPACE} --type LoadBalancer
+            fi'''
+      }
+      post {
+        success{
+          sh 'kubectl get svc -n ${ELK_NAMESPACE} | grep kibana-dashboard'
+        }
       }
     }
   }
